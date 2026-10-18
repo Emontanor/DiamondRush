@@ -24,8 +24,9 @@ Contratos entre módulos:
         .compute(board)         -> Result
         Result.status           -> Status.PLAN | Status.IMPOSSIBLE | Status.NO_RESULT
         Result.moves            -> lista de movimientos (vacía salvo en Status.PLAN)
+        Result.is_final         -> bool: True si el plan debería completar el nivel
 
-    Controll(region)
+    Controll()
         .move(move)             -> presiona la flecha y espera la animación
         .restart_level()        -> clic en el botón de reinicio (el de la derecha)
 """
@@ -81,7 +82,7 @@ class Environment:
         self.capture = Capture(config.region)
         self.perception = Perception()
         self.agent = Agent()
-        self.controll = Controll(config.region)
+        self.controll = Controll()
 
         # Estado del juego visible para main (última observación fiable).
         self.board = None
@@ -127,15 +128,21 @@ class Environment:
                 self._register_error("el agente no devolvió un plan")
                 continue
 
-            log.info("Plan de %d movimientos.", len(result.moves))
+            log.info("Plan de %d movimientos%s.",
+                     len(result.moves),
+                     " (final)" if result.is_final else "")
             self._execute(result.moves)
             self.at_initial_state = False
 
             self._observe()
-            if self.hud.level != self.current_level:
-                self._confirm_level_change()
-            else:
-                self._register_error("el nivel no cambió tras ejecutar el plan")
+
+            # Solo validar cambio de nivel si el agente dice que es plan final
+            if result.is_final:
+                if self.hud.level != self.current_level:
+                    self._confirm_level_change()
+                else:
+                    self._register_error("el nivel no cambió tras ejecutar el plan final")
+            # Si no es final, continuar el ciclo sin validar ni incrementar errores
 
     # ------------------------------------------------------------- acciones
 
