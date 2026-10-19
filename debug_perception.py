@@ -22,7 +22,9 @@ def main() -> int:
     print(f"HUD: nivel={observation.hud.level}, diamantes="
           f"{observation.hud.collected}/{observation.hud.total}")
     print(f"Observación fiable: {observation.is_reliable}")
-    print("Board (códigos numéricos):")
+    board_width = len(observation.board[0]) if observation.board else 0
+    print(f"Board {len(observation.board)}x{board_width} "
+          "(sin columnas de muro ni fila inferior; códigos numéricos):")
     for row in observation.board:
         print("[" + ", ".join(f"{code:2d}" for code in row) + "]")
 

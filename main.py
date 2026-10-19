@@ -15,7 +15,9 @@ Contratos entre módulos:
 
     Perception()
         .parse(imagen)          -> Observation
-        Observation.board       -> matriz 12x10 con un código entero por tile
+        Observation.board       -> matriz 11x8 normalmente, 12x8 en nivel 8;
+                                   omite muros laterales e inferior constantes.
+                                   board[r][c] corresponde a la columna visual c+1.
         Observation.hud         -> .level (comparable con ==), .collected, .total
         Observation.is_reliable -> bool: sin celdas desconocidas y consistente con el HUD
         lanza PerceptionError si no logra leer el HUD
