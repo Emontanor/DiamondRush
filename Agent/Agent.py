@@ -20,7 +20,7 @@ class Agent:
     def __init__(self):
         return
 
-    def compute(self, board: list[list[int]]) -> Result:
+    def compute(self, board: list[list[int]], level: int) -> Result:
         """Implementación temporal de prueba.
 
         Recibe el tablero, confirma que lo recibió, y devuelve una secuencia fija.
@@ -32,17 +32,40 @@ class Agent:
         print(f"[Agent] Primera fila: {board[0] if board else 'vacío'}")
 
         # Generar secuencia de movimientos
-        moves = (
-            ['RIGHT'] * 5 +    # derecha x5
-            ['DOWN'] * 3 +     # abajo x3
-            ['LEFT'] * 5 +     # izquierda x5
-            ['DOWN'] * 2 +     # abajo x2
-            ['RIGHT'] +        # derecha
-            ['DOWN'] +         # abajo
-            ['RIGHT'] * 3 +    # derecha x3
-            ['DOWN'] +         # abajo
-            ['RIGHT']          # derecha
-        )
+        if level == 1:
+            moves = (
+                ['RIGHT'] * 5 +    # derecha x5
+                ['DOWN'] * 3 +     # abajo x3
+                ['LEFT'] * 5 +     # izquierda x5
+                ['DOWN'] * 2 +     # abajo x2
+                ['RIGHT'] +        # derecha
+                ['DOWN'] +         # abajo
+                ['RIGHT'] * 3 +    # derecha x3
+                ['DOWN'] +         # abajo
+                ['RIGHT']          # derecha
+            )
+        elif level == 2:
+            moves = (
+                ['LEFT'] * 6 +         # izquierda x6
+                ['DOWN'] +            # abajo
+                ['RIGHT'] +           # derecha
+                ['UP'] +              # arriba
+                ['LEFT'] +            # izquierda
+                ['UP'] * 8 +          # arriba x8
+                ['RIGHT'] +           # derecha
+                ['UP'] +              # arriba
+                ['RIGHT'] +           # derecha
+                ['DOWN'] +            # abajo
+                ['RIGHT'] * 2 +       # derecha x2
+                ['DOWN'] * 3 +        # abajo x3
+                ['RIGHT'] * 2 +       # derecha x2
+                ['UP'] +              # arriba
+                ['LEFT'] * 2 +        # izquierda x2
+                ['DOWN'] * 3 +        # abajo x3
+                ['LEFT'] * 2 +        # izquierda x2
+                ['DOWN']              # abajo
+            )
+
 
         print(f"[Agent] Plan generado: {len(moves)} movimientos")
 

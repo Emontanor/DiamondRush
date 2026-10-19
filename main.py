@@ -51,7 +51,7 @@ log = logging.getLogger("DiamondRush")
 @dataclass
 class Config:
     # --- Condiciones de parada ---
-    levels_to_pass: int = 1                 # cuántos niveles debe pasar antes de terminar
+    levels_to_pass: int = 2                 # cuántos niveles debe pasar antes de terminar
     time_limit: float = 120.0               # límite global de seguridad para toda la ejecución
 
     # --- Tolerancia a fallos ---
@@ -59,9 +59,10 @@ class Config:
     max_perception_retries: int = 5         # lecturas fallidas seguidas antes de abortar
 
     # --- Tiempos de espera (segundos) ---
-    start_delay: float = 5.0                # para enfocar la ventana del juego
-    settle_delay: float = 1.0               # tras cambio de nivel o reinicio, deja terminar la animación
+    start_delay: float = 1.0                # para enfocar la ventana del juego
+    settle_delay: float = 1               # tras cambio de nivel o reinicio, deja terminar la animación
     retry_wait: float = 0.3                 # entre lecturas fallidas
+    confirm_delay: float = 0.2
 
     # --- Región de pantalla (left, top, width, height): HUD + grilla. Calibrar. ---
     region: Tuple[int, int, int, int] = DEFAULT_REGION
@@ -120,7 +121,7 @@ class Environment:
 
         while self.levels_passed < self.cfg.levels_to_pass:
             self._check_time()
-            result = self.agent.compute(self.board)
+            result = self.agent.compute(self.board, self.current_level)
 
             if result.status == Status.IMPOSSIBLE:
                 self._handle_impossible()
@@ -136,6 +137,7 @@ class Environment:
             self._execute(result.moves)
             self.at_initial_state = False
 
+            time.sleep(self.cfg.confirm_delay)  # animacion de cambio de nivel
             self._observe()
 
             # Solo validar cambio de nivel si el agente dice que es plan final
@@ -144,7 +146,11 @@ class Environment:
                     self._confirm_level_change()
                 else:
                     self._register_error("el nivel no cambió tras ejecutar el plan final")
+                    self.controll.restart_level()
             # Si no es final, continuar el ciclo sin validar ni incrementar errores
+        
+        elapsed = time.monotonic() - (self._deadline - self.cfg.time_limit)
+        log.info("Objetivo alcanzado: %d niveles completados en %.1f s.", self.levels_passed, elapsed)
 
     # ------------------------------------------------------------- acciones
 
@@ -169,17 +175,21 @@ class Environment:
 
     def _confirm_level_change(self) -> None:
         """Acepta el cambio solo si dos lecturas seguidas coinciden (evita leer la transición)."""
-        candidate = self.hud.level
-        for _ in range(self.cfg.max_perception_retries):
-            time.sleep(self.cfg.settle_delay)
-            self._observe()
-            if self.hud.level == candidate and candidate != self.current_level:
-                self._on_level_passed()
-                return
-            candidate = self.hud.level
-            if candidate == self.current_level:
-                break
-        self._register_error("cambio de nivel no confirmado")
+        # candidate = self.hud.level
+        # for _ in range(self.cfg.max_perception_retries):
+        #     time.sleep(self.cfg.settle_delay)
+        #     self._observe()
+        #     if self.hud.level == candidate and candidate != self.current_level:
+        #         self._on_level_passed()
+        #         return
+        #     candidate = self.hud.level
+        #     if candidate == self.current_level:
+        #         break
+        # self._register_error("cambio de nivel no confirmado")
+        if self.hud.level == self.current_level+1:
+            self._on_level_passed()
+            return
+        self._register_error("Cambio de nivel no confirmado")
 
     def _on_level_passed(self) -> None:
         self.levels_passed += 1
