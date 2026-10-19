@@ -1,3 +1,3 @@
-from .Agent import Agent, Status, Result
+from .Agent import Agent, Result
 
-__all__ = ['Agent', 'Status', 'Result']
+__all__ = ['Agent', 'Result']
