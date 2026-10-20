@@ -1,69 +1,43 @@
 """Agente que planifica movimientos a partir del estado del tablero."""
 from __future__ import annotations
 
+import ctypes
+import os
+from array import array
 from dataclasses import dataclass
-from enum import Enum
+from itertools import chain
 
 @dataclass
 class Result:
     moves: list[str]
     is_final: bool
 
+_lib = ctypes.CDLL(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Solver", "libdrsolver.so"))
+_solve = _lib.dr_solve
+_solve.argtypes = (ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p)
+_solve.restype = ctypes.c_int
+_CAP = 65536
+_buf = ctypes.create_string_buffer(_CAP)
+_BUF = ctypes.addressof(_buf)
+_final = ctypes.c_int(0)
+_FINAL = ctypes.addressof(_final)
+_flat = chain.from_iterable
+_at = ctypes.string_at
+_names = [None] * 256
+_names[85] = "UP"
+_names[68] = "DOWN"
+_names[76] = "LEFT"
+_names[82] = "RIGHT"
+_name = tuple(_names).__getitem__
+
 class Agent:
 
     def __init__(self):
         return
 
-    def compute(self, board: list[list[int]]) -> Result:
-        """Implementación temporal de prueba.
-
-        Recibe el tablero, confirma que lo recibió, y devuelve una secuencia fija.
-        Secuencia: derecha x5, abajo x3, izquierda x5, abajo x2, derecha,
-                   abajo, derecha x3, abajo, derecha
-        """
-        # Confirmar recepción del tablero
-        print(f"[Agent] Tablero recibido: {len(board)}x{len(board[0]) if board else 0}")
-        print(f"[Agent] Primera fila: {board[0] if board else 'vacío'}")
-
-        # Generar secuencia de movimientos
-        #if level == 1:
-        moves = (
-            ['RIGHT'] * 5 +    # derecha x5
-            ['DOWN'] * 3 +     # abajo x3
-            ['LEFT'] * 5 +     # izquierda x5
-            ['DOWN'] * 2 +     # abajo x2
-            ['RIGHT'] +        # derecha
-            ['DOWN'] +         # abajo
-            ['RIGHT'] * 3 +    # derecha x3
-            ['DOWN'] +         # abajo
-            ['RIGHT']          # derecha
-        )
-        #elif level == 2:
-            # moves = (
-            #     ['LEFT'] * 6 +         # izquierda x6
-            #     ['DOWN'] +            # abajo
-            #     ['RIGHT'] +           # derecha
-            #     ['UP'] +              # arriba
-            #     ['LEFT'] +            # izquierda
-            #     ['UP'] * 8 +          # arriba x8
-            #     ['RIGHT'] +           # derecha
-            #     ['UP'] +              # arriba
-            #     ['RIGHT'] +           # derecha
-            #     ['DOWN'] +            # abajo
-            #     ['RIGHT'] * 2 +       # derecha x2
-            #     ['DOWN'] * 3 +        # abajo x3
-            #     ['RIGHT'] * 2 +       # derecha x2
-            #     ['UP'] +              # arriba
-            #     ['LEFT'] * 2 +        # izquierda x2
-            #     ['DOWN'] * 3 +        # abajo x3
-            #     ['LEFT'] * 2 +        # izquierda x2
-            #     ['DOWN']              # abajo
-            # )
-
-
-        print(f"[Agent] Plan generado: {len(moves)} movimientos")
-
-        return Result(
-            moves=moves,
-            is_final=True
-        )
+    def compute(self, board: list[list[int]], use_algorithm_1: bool) -> Result:
+        cells = array("i", _flat(board))
+        n = _solve(cells.buffer_info()[0], len(cells), use_algorithm_1, _BUF, _CAP, _FINAL)
+        if n < 0:
+            return Result([], False)
+        return Result(list(map(_name, _at(_BUF, n))), _final.value == 1)

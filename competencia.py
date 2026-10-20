@@ -40,6 +40,8 @@ class Environment:
         self.errors_in_level = 0
         self.deadline = 0.0
         self.initial_level = None
+        # Primero la solución precalculada (algoritmo 2); si no aplica o falla, búsqueda (algoritmo 1).
+        self.use_algorithm_1 = False
 
     def run(self) -> int:
         try:
@@ -50,11 +52,12 @@ class Environment:
 
             while True:
                 self.check_time()
-                result = self.agent.compute(self.board)
+                result = self.agent.compute(self.board, self.use_algorithm_1)
 
                 # Un plan vacío equivale a que el agente aún no propone acción.
                 if not result.moves:
                     log.info("El agente no propuso movimientos; se vuelve a observar.")
+                    self.use_algorithm_1 = True
                     time.sleep(self.cfg.settle_delay)
                     self.observe()
                     continue
@@ -72,6 +75,7 @@ class Environment:
                         log.info("Nivel %s completado en %.1f s.", self.initial_level, elapsed)
                         return 0
                     self._register_error("el plan final no completó el nivel")
+                    self.use_algorithm_1 = True
                 else:
                     self.observe()
         except Abort as stop:
