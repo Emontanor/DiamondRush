@@ -31,7 +31,7 @@ class Perception:
     BOARD_ROWS = 12
     BOARD_COLS = 10
     PLAYABLE_COLS = BOARD_COLS - 2
-    EXTRA_TOP_ROW_LEVELS = frozenset({8})
+    EXTRA_TOP_ROW_LEVELS = frozenset({8, 20})
     HUD_HEIGHT_RATIO = 0.20
     CELL_SIZE = (48, 48)
     CELL_BORDER_TRIM = 1
@@ -52,6 +52,7 @@ class Perception:
         "Piso": TileCode.FLOOR,
         "PuertaLlave": TileCode.LOCKED_DOOR,
         "PlacaPresion": TileCode.PRESSURE_PLATE,
+        "Relic": TileCode.RELIC,
     }
 
     def __init__(self, sprites_dir: str | Path | None = None):
@@ -110,13 +111,13 @@ class Perception:
                 row_codes.append(int(code))
             board.append(row_codes)
 
-        remaining_diamonds = hud.total - hud.collected
-        observed_diamonds = sum(
-            code == TileCode.DIAMOND
-            for row_codes in board
-            for code in row_codes
-        )
-        reliable = not unknown_cells and observed_diamonds == remaining_diamonds
+        # remaining_diamonds = hud.total - hud.collected
+        # observed_diamonds = sum(
+        #     code == TileCode.DIAMOND
+        #     for row_codes in board
+        #     for code in row_codes
+        # )
+        reliable = not unknown_cells
         return Observation(board=board, hud=hud, is_reliable=reliable)
 
     @classmethod

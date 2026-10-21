@@ -41,7 +41,7 @@ class Environment:
         self.deadline = 0.0
         self.initial_level = None
         # Primero la solución precalculada (algoritmo 2); si no aplica o falla, búsqueda (algoritmo 1).
-        self.use_algorithm_1 = False
+        self.use_algorithm_1 = True
 
     def run(self) -> int:
         try:
@@ -53,6 +53,8 @@ class Environment:
             while True:
                 self.check_time()
                 result = self.agent.compute(self.board, self.use_algorithm_1)
+                # El coste de planificación también pertenece al tiempo de resolución.
+                self.check_time()
 
                 # Un plan vacío equivale a que el agente aún no propone acción.
                 if not result.moves:
@@ -66,6 +68,7 @@ class Environment:
                          len(result.moves),
                          " (final)" if result.is_final else "")
                 self.execute(result.moves)
+                self.check_time()
 
                 if result.is_final:
                     time.sleep(self.cfg.settle_delay)
@@ -103,6 +106,7 @@ class Environment:
     # --- Controll Management
     def execute(self, moves):
         for move in moves:
+            self.check_time()
             self.controll.move(move)
 
     # --- Error Management

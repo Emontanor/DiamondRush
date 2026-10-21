@@ -21,3 +21,6 @@ class TileCode(IntEnum):
     PRESSURE_PLATE = 14
     DOOR_OPEN = 15
     DOOR_CLOSED = 16
+    PLAYER_ON_SPIKES = 17
+    PLAYER_ON_PLATE = 18
+    RELIC = 19
